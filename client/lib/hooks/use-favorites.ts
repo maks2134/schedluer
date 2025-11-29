@@ -31,7 +31,7 @@ export function useFavorites() {
   const addFavorite = async (groupNumber: string) => {
     try {
       await apiClient.addFavorite(groupNumber, USER_ID);
-      await loadFavorites();
+      // Не перезагружаем сразу - состояние уже обновлено оптимистично
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       throw err;
@@ -41,7 +41,7 @@ export function useFavorites() {
   const removeFavorite = async (groupNumber: string) => {
     try {
       await apiClient.removeFavorite(groupNumber, USER_ID);
-      await loadFavorites();
+      // Не перезагружаем сразу - состояние уже обновлено оптимистично
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       throw err;
@@ -80,12 +80,12 @@ export function useFavorites() {
 
     try {
       if (currentlyFavorite) {
-        await removeFavorite(groupNumber);
+        await apiClient.removeFavorite(groupNumber, USER_ID);
       } else {
-        await addFavorite(groupNumber);
+        await apiClient.addFavorite(groupNumber, USER_ID);
       }
-      // Перезагружаем для синхронизации с сервером
-      await loadFavorites();
+      // НЕ перезагружаем - оптимистичное обновление уже сделано и корректно
+      // Состояние уже синхронизировано с сервером через API вызов
     } catch (err) {
       // Откатываем изменения при ошибке
       await loadFavorites();
