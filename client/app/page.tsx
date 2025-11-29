@@ -61,9 +61,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left sidebar - Groups/Employees */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-2 lg:order-1">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'groups' | 'employees')}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="groups">Группы</TabsTrigger>
@@ -90,7 +90,7 @@ export default function Home() {
                   selectedEmployee={selectedEmployee}
                   onSelectEmployee={handleEmployeeSelect}
                   onRefresh={refreshEmployees}
-                />
+            />
                 {employeesError && (
                   <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
                     {employeesError}
@@ -101,7 +101,7 @@ export default function Home() {
           </div>
 
           {/* Right side - Schedule */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-1 lg:order-2">
             {scheduleError && (
               <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg">
                 Ошибка: {scheduleError}

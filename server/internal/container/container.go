@@ -25,10 +25,12 @@ type Container struct {
 	ScheduleRepo repository.ScheduleRepository
 	GroupRepo    repository.GroupRepository
 	EmployeeRepo repository.EmployeeRepository
+	FavoriteRepo repository.FavoriteRepository
 
 	ScheduleService service.ScheduleService
 	GroupService    service.GroupService
 	EmployeeService service.EmployeeService
+	FavoriteService service.FavoriteService
 
 	Router *handler.Router
 
@@ -54,12 +56,14 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	scheduleRepo := repository.NewScheduleRepository(mongoDB.Database)
 	groupRepo := repository.NewGroupRepository(mongoDB.Database)
 	employeeRepo := repository.NewEmployeeRepository(mongoDB.Database)
+	favoriteRepo := repository.NewFavoriteRepository(mongoDB.Database)
 
 	scheduleService := service.NewScheduleService(bsuirClient, scheduleRepo, logger)
 	groupService := service.NewGroupService(bsuirClient, groupRepo, logger)
 	employeeService := service.NewEmployeeService(bsuirClient, employeeRepo, logger)
+	favoriteService := service.NewFavoriteService(favoriteRepo, logger)
 
-	apiRouter := handler.NewRouter(scheduleService, groupService, employeeService, logger)
+	apiRouter := handler.NewRouter(scheduleService, groupService, employeeService, favoriteService, logger)
 
 	return &Container{
 		Config:          cfg,
@@ -68,9 +72,11 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		ScheduleRepo:    scheduleRepo,
 		GroupRepo:       groupRepo,
 		EmployeeRepo:    employeeRepo,
+		FavoriteRepo:    favoriteRepo,
 		ScheduleService: scheduleService,
 		GroupService:    groupService,
 		EmployeeService: employeeService,
+		FavoriteService: favoriteService,
 		Router:          apiRouter,
 		Logger:          logger,
 	}, nil

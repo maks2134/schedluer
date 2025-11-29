@@ -11,13 +11,15 @@ type Router struct {
 	scheduleHandler *ScheduleHandler
 	groupHandler    *GroupHandler
 	employeeHandler *EmployeeHandler
+	favoriteHandler *FavoriteHandler
 }
 
-func NewRouter(scheduleService service.ScheduleService, groupService service.GroupService, employeeService service.EmployeeService, logger *logrus.Logger) *Router {
+func NewRouter(scheduleService service.ScheduleService, groupService service.GroupService, employeeService service.EmployeeService, favoriteService service.FavoriteService, logger *logrus.Logger) *Router {
 	return &Router{
 		scheduleHandler: NewScheduleHandler(scheduleService, logger),
 		groupHandler:    NewGroupHandler(groupService, logger),
 		employeeHandler: NewEmployeeHandler(employeeService, logger),
+		favoriteHandler: NewFavoriteHandler(favoriteService, logger),
 	}
 }
 
@@ -44,5 +46,13 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 		employees.GET("", r.employeeHandler.GetAllEmployees)
 		employees.GET("/:urlId", r.employeeHandler.GetEmployeeByURLID)
 		employees.POST("/refresh", r.employeeHandler.RefreshEmployees)
+	}
+
+	favorites := api.Group("/favorites")
+	{
+		favorites.GET("", r.favoriteHandler.GetAllFavorites)
+		favorites.POST("/:groupNumber", r.favoriteHandler.AddFavorite)
+		favorites.DELETE("/:groupNumber", r.favoriteHandler.RemoveFavorite)
+		favorites.GET("/:groupNumber/check", r.favoriteHandler.IsFavorite)
 	}
 }
