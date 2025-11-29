@@ -21,10 +21,8 @@ import (
 // @title           Schedluer API
 // @version         1.0
 // @description     API для работы с расписанием БГУИР
-
 // @host      localhost:8080
 // @BasePath  /api/v1
-
 // @schemes   http https
 func main() {
 	cfg, err := config.Load()
@@ -87,7 +85,7 @@ func setupRouter(ctn *container.Container, cfg *config.Config) *gin.Engine {
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		AllowCredentials: true,
-		MaxAge:           12 * 60 * 60, // 12 hours
+		MaxAge:           12 * 60 * 60,
 	}))
 
 	router.GET("/health", func(c *gin.Context) {

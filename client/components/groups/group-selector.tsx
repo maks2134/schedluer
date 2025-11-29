@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,22 +28,30 @@ export function GroupSelector({
   refreshing,
 }: GroupSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const { isFavorite, toggleFavorite, loading: favoritesLoading } = useFavorites();
+  const { isFavorite, toggleFavorite, loading: favoritesLoading, favorites } = useFavorites();
 
-  const filteredGroups = groups.filter((group) =>
-    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.specialityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.facultyName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredGroups = useMemo(() => {
+    return groups.filter((group) =>
+      group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group.specialityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group.facultyName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [groups, searchQuery]);
 
   // Сортируем: избранные группы сверху
-  const sortedGroups = [...filteredGroups].sort((a, b) => {
-    const aIsFavorite = isFavorite(a.name);
-    const bIsFavorite = isFavorite(b.name);
-    if (aIsFavorite && !bIsFavorite) return -1;
-    if (!aIsFavorite && bIsFavorite) return 1;
-    return 0;
-  });
+  const sortedGroups = useMemo(() => {
+    const favoriteGroupNumbers = new Set(
+      Array.isArray(favorites) ? favorites.map((f) => f.group_number) : []
+    );
+    
+    return [...filteredGroups].sort((a, b) => {
+      const aIsFavorite = favoriteGroupNumbers.has(a.name);
+      const bIsFavorite = favoriteGroupNumbers.has(b.name);
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return 0;
+    });
+  }, [filteredGroups, favorites]);
 
   if (loading) {
     return (
@@ -92,11 +100,11 @@ export function GroupSelector({
               placeholder="Поиск по номеру группы..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 text-sm sm:text-base"
+              className="pl-9 text-sm sm:text-base w-full"
               autoComplete="off"
             />
           </div>
-          <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto space-y-2">
+          <div className="max-h-[400px] sm:max-h-[600px] overflow-y-auto space-y-2 overscroll-contain">
             {sortedGroups.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Группы не найдены
@@ -116,20 +124,15 @@ export function GroupSelector({
                     <div className="flex items-start gap-2 p-3">
                       <button
                         onClick={() => onSelectGroup(group.name)}
-                        className="flex-1 text-left min-w-0 pr-2"
+                        className="flex-1 text-left min-w-0 pr-2 overflow-hidden"
                       >
                         <div className="space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="font-semibold text-base break-words">{group.name}</div>
-                            {favorite && (
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground line-clamp-2">
+                          <div className="font-semibold text-base break-words">{group.name}</div>
+                          <div className="text-sm text-muted-foreground line-clamp-2 break-words">
                             {group.specialityName}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            <span className="line-clamp-1">{group.facultyName}</span>
+                          <div className="text-xs text-muted-foreground line-clamp-1 break-words">
+                            {group.facultyName}
                             <span className="hidden sm:inline"> • {group.course} курс</span>
                           </div>
                         </div>
@@ -137,7 +140,7 @@ export function GroupSelector({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 shrink-0 flex-shrink-0"
+                        className="h-8 w-8 p-0 shrink-0 flex-shrink-0 mt-0.5"
                         disabled={favoritesLoading}
                         onClick={async (e) => {
                           e.stopPropagation();

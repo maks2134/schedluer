@@ -51,6 +51,7 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 	favorites := api.Group("/favorites")
 	{
 		favorites.GET("", r.favoriteHandler.GetAllFavorites)
+		favorites.GET("/search", r.favoriteHandler.SearchFavorites)
 		favorites.POST("/:groupNumber", r.favoriteHandler.AddFavorite)
 		favorites.DELETE("/:groupNumber", r.favoriteHandler.RemoveFavorite)
 		favorites.GET("/:groupNumber/check", r.favoriteHandler.IsFavorite)

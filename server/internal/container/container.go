@@ -56,7 +56,7 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	scheduleRepo := repository.NewScheduleRepository(mongoDB.Database)
 	groupRepo := repository.NewGroupRepository(mongoDB.Database)
 	employeeRepo := repository.NewEmployeeRepository(mongoDB.Database)
-	favoriteRepo := repository.NewFavoriteRepository(mongoDB.Database)
+	favoriteRepo := repository.NewFavoriteRepository(mongoDB.Database, logger)
 
 	scheduleService := service.NewScheduleService(bsuirClient, scheduleRepo, logger)
 	groupService := service.NewGroupService(bsuirClient, groupRepo, logger)
