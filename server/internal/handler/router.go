@@ -7,20 +7,13 @@ import (
 	"schedluer/internal/service"
 )
 
-// Router настраивает все маршруты API
 type Router struct {
 	scheduleHandler *ScheduleHandler
 	groupHandler    *GroupHandler
 	employeeHandler *EmployeeHandler
 }
 
-// NewRouter создает новый роутер
-func NewRouter(
-	scheduleService service.ScheduleService,
-	groupService service.GroupService,
-	employeeService service.EmployeeService,
-	logger *logrus.Logger,
-) *Router {
+func NewRouter(scheduleService service.ScheduleService, groupService service.GroupService, employeeService service.EmployeeService, logger *logrus.Logger) *Router {
 	return &Router{
 		scheduleHandler: NewScheduleHandler(scheduleService, logger),
 		groupHandler:    NewGroupHandler(groupService, logger),
@@ -28,11 +21,9 @@ func NewRouter(
 	}
 }
 
-// SetupRoutes настраивает все маршруты
 func (r *Router) SetupRoutes(engine *gin.Engine) {
 	api := engine.Group("/api/v1")
 
-	// Расписание
 	schedule := api.Group("/schedule")
 	{
 		schedule.GET("/group/:groupNumber", r.scheduleHandler.GetGroupSchedule)
@@ -41,7 +32,6 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 		schedule.POST("/employee/:urlId/refresh", r.scheduleHandler.RefreshEmployeeSchedule)
 	}
 
-	// Группы
 	groups := api.Group("/groups")
 	{
 		groups.GET("", r.groupHandler.GetAllGroups)
@@ -49,7 +39,6 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 		groups.POST("/refresh", r.groupHandler.RefreshGroups)
 	}
 
-	// Преподаватели
 	employees := api.Group("/employees")
 	{
 		employees.GET("", r.employeeHandler.GetAllEmployees)
