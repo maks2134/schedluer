@@ -1,0 +1,535 @@
+basePath: /api/v1
+definitions:
+  models.EmployeeDto:
+    properties:
+      academicDepartment:
+        items:
+          type: string
+        type: array
+      calendarId:
+        type: string
+      degree:
+        type: string
+      degreeAbbrev:
+        type: string
+      email:
+        type: string
+      fio:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      jobPositions:
+        items:
+          type: string
+        type: array
+      lastName:
+        type: string
+      middleName:
+        type: string
+      photoLink:
+        type: string
+      rank:
+        type: string
+      urlId:
+        type: string
+    type: object
+  models.EmployeeListItem:
+    properties:
+      academicDepartment:
+        items:
+          type: string
+        type: array
+      calendarId:
+        type: string
+      degree:
+        type: string
+      fio:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: integer
+      lastName:
+        type: string
+      middleName:
+        type: string
+      photoLink:
+        type: string
+      rank:
+        type: string
+      urlId:
+        type: string
+    type: object
+  models.Schedule:
+    properties:
+      announcement:
+        type: boolean
+      auditories:
+        items:
+          type: string
+        type: array
+      dateLesson:
+        type: string
+      employees:
+        items:
+          $ref: '#/definitions/models.EmployeeDto'
+        type: array
+      endLessonDate:
+        type: string
+      endLessonTime:
+        type: string
+      lessonTypeAbbrev:
+        type: string
+      note:
+        type: string
+      numSubgroup:
+        type: integer
+      split:
+        type: boolean
+      startLessonDate:
+        type: string
+      startLessonTime:
+        type: string
+      studentGroups:
+        items:
+          $ref: '#/definitions/models.StudentGroup'
+        type: array
+      subject:
+        type: string
+      subjectFullName:
+        type: string
+      weekNumber:
+        items:
+          type: integer
+        type: array
+    type: object
+  models.ScheduleResponse:
+    properties:
+      employeeDto:
+        $ref: '#/definitions/models.EmployeeDto'
+      endDate:
+        type: string
+      endExamsDate:
+        type: string
+      exams:
+        items:
+          $ref: '#/definitions/models.Schedule'
+        type: array
+      schedules:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/models.Schedule'
+          type: array
+        type: object
+      startDate:
+        type: string
+      startExamsDate:
+        type: string
+      studentGroupDto:
+        $ref: '#/definitions/models.StudentGroupDto'
+    type: object
+  models.StudentGroup:
+    properties:
+      educationDegree:
+        type: integer
+      name:
+        type: string
+      numberOfStudents:
+        type: integer
+      specialityCode:
+        type: string
+      specialityName:
+        type: string
+    type: object
+  models.StudentGroupDto:
+    properties:
+      calendarId:
+        type: string
+      course:
+        type: integer
+      educationDegree:
+        type: integer
+      facultyAbbrev:
+        type: string
+      facultyId:
+        type: integer
+      facultyName:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      specialityAbbrev:
+        type: string
+      specialityDepartmentEducationFormId:
+        type: integer
+      specialityName:
+        type: string
+    type: object
+  models.StudentGroupListItem:
+    properties:
+      calendarId:
+        type: string
+      course:
+        type: integer
+      facultyId:
+        type: integer
+      facultyName:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      specialityDepartmentEducationFormId:
+        type: integer
+      specialityName:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API для работы с расписанием БГУИРа
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Schedluer API
+  version: "1.0"
+paths:
+  /api/v1/employees:
+    get:
+      consumes:
+      - application/json
+      description: Получает список всех преподавателей из БГУИРа
+      parameters:
+      - default: true
+        description: Использовать кэш
+        in: query
+        name: useCache
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.EmployeeListItem'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список всех преподавателей
+      tags:
+      - employees
+  /api/v1/employees/{urlId}:
+    get:
+      consumes:
+      - application/json
+      description: Получает информацию о преподавателе по URL ID
+      parameters:
+      - description: URL ID преподавателя
+        in: path
+        name: urlId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.EmployeeListItem'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить преподавателя по URL ID
+      tags:
+      - employees
+  /api/v1/employees/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Принудительно обновляет список всех преподавателей из API БГУИРа
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить список всех преподавателей
+      tags:
+      - employees
+  /api/v1/groups:
+    get:
+      consumes:
+      - application/json
+      description: Получает список всех групп из БГУИРа
+      parameters:
+      - default: true
+        description: Использовать кэш
+        in: query
+        name: useCache
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.StudentGroupListItem'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список всех групп
+      tags:
+      - groups
+  /api/v1/groups/{groupNumber}:
+    get:
+      consumes:
+      - application/json
+      description: Получает информацию о группе по номеру
+      parameters:
+      - description: Номер группы
+        in: path
+        name: groupNumber
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.StudentGroupListItem'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить группу по номеру
+      tags:
+      - groups
+  /api/v1/groups/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Принудительно обновляет список всех групп из API БГУИРа
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить список всех групп
+      tags:
+      - groups
+  /api/v1/schedule/employee/{urlId}:
+    get:
+      consumes:
+      - application/json
+      description: Получает расписание преподавателя по URL ID
+      parameters:
+      - description: URL ID преподавателя
+        in: path
+        name: urlId
+        required: true
+        type: string
+      - default: true
+        description: Использовать кэш
+        in: query
+        name: useCache
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ScheduleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить расписание преподавателя
+      tags:
+      - schedule
+  /api/v1/schedule/employee/{urlId}/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Принудительно обновляет расписание преподавателя из API БГУИРа
+      parameters:
+      - description: URL ID преподавателя
+        in: path
+        name: urlId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить расписание преподавателя
+      tags:
+      - schedule
+  /api/v1/schedule/group/{groupNumber}:
+    get:
+      consumes:
+      - application/json
+      description: Получает расписание группы по номеру группы
+      parameters:
+      - description: Номер группы
+        in: path
+        name: groupNumber
+        required: true
+        type: string
+      - default: true
+        description: Использовать кэш
+        in: query
+        name: useCache
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ScheduleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить расписание группы
+      tags:
+      - schedule
+  /api/v1/schedule/group/{groupNumber}/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Принудительно обновляет расписание группы из API БГУИРа
+      parameters:
+      - description: Номер группы
+        in: path
+        name: groupNumber
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить расписание группы
+      tags:
+      - schedule
+schemes:
+- http
+- https
+swagger: "2.0"
