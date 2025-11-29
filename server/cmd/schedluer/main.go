@@ -14,16 +14,13 @@ import (
 )
 
 func main() {
-	// Загружаем конфигурацию
 	cfg, err := config.Load()
 	if err != nil {
 		logrus.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Настраиваем логгер
 	setupLogger(cfg.Logger.Level)
 
-	// Создаем DI-контейнер
 	ctn, err := container.NewContainer(cfg)
 	if err != nil {
 		logrus.Fatalf("Failed to create container: %v", err)
@@ -34,14 +31,11 @@ func main() {
 		}
 	}()
 
-	// Инициализируем HTTP сервер
 	router := setupRouter(ctn)
 
-	// Запускаем сервер
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	logrus.Infof("Starting server on %s", addr)
 
-	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -75,9 +69,7 @@ func setupLogger(level string) {
 func setupRouter(ctn *container.Container) *gin.Engine {
 	router := gin.Default()
 
-	// Health check
 	router.GET("/health", func(c *gin.Context) {
-		// Проверяем состояние MongoDB
 		if err := ctn.MongoDB.Health(c.Request.Context()); err != nil {
 			c.JSON(503, gin.H{
 				"status": "unhealthy",
@@ -91,7 +83,6 @@ func setupRouter(ctn *container.Container) *gin.Engine {
 		})
 	})
 
-	// Настраиваем API роуты
 	ctn.Router.SetupRoutes(router)
 
 	return router
