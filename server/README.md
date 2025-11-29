@@ -78,6 +78,8 @@ go run cmd/schedluer/main.go
 
 ### Docker
 
+### Локальная сборка
+
 #### Сборка образа:
 ```bash
 make docker-build
@@ -92,21 +94,52 @@ make docker-run
 docker run --rm -p 8080:8080 --env-file .env schedluer:latest
 ```
 
-#### Docker Compose:
+### GitHub Container Registry (ghcr.io)
+
+Проект настроен для автоматической публикации Docker образов в GitHub Container Registry.
+
+**Использование образа из ghcr.io:**
+```bash
+# Войдите в GitHub Container Registry
+docker login ghcr.io -u YOUR_USERNAME -p YOUR_TOKEN
+
+# Запустите контейнер
+docker run --rm -p 8080:8080 \
+  --env-file .env \
+  ghcr.io/YOUR_USERNAME/schedluer:latest
+```
+
+**Автоматическая публикация:**
+- При push в `main`/`master`/`develop` - автоматическая сборка и публикация
+- При создании тега `v*.*.*` - публикация версии
+- См. [GITHUB_PACKAGES.md](../GITHUB_PACKAGES.md) для подробностей
+
+### Docker Compose
+
+#### Локальная разработка:
 ```bash
 make docker-compose-up
 # или
 docker-compose up -d
 ```
 
+#### Production (из ghcr.io):
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 Просмотр логов:
 ```bash
 make docker-compose-logs
+# или
+docker-compose logs -f
 ```
 
 Остановка:
 ```bash
 make docker-compose-down
+# или
+docker-compose down
 ```
 
 ## API Документация
