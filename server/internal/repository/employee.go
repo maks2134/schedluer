@@ -76,7 +76,12 @@ func (r *employeeRepository) GetAll(ctx context.Context) ([]models.StoredEmploye
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			return
+		}
+	}(cursor, ctx)
 
 	var employees []models.StoredEmployee
 	if err := cursor.All(ctx, &employees); err != nil {
