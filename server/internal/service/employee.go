@@ -56,20 +56,26 @@ func (s *employeeService) GetAllEmployees(ctx context.Context, useCache bool) ([
 		return nil, fmt.Errorf("failed to get employees from BSUIR API: %w", err)
 	}
 
-	for _, e := range employees {
-		stored := models.StoredEmployee{
-			ID:             primitive.NewObjectID(),
-			BSUIRID:        e.ID,
-			URLID:          e.URLID,
-			EmployeeData:   e,
-			LastUpdateDate: time.Now().Format("02.01.2006"),
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+	// Сохраняем в фоне с отдельным контекстом
+	go func() {
+		saveCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		for _, e := range employees {
+			stored := models.StoredEmployee{
+				ID:             primitive.NewObjectID(),
+				BSUIRID:        e.ID,
+				URLID:          e.URLID,
+				EmployeeData:   e,
+				LastUpdateDate: time.Now().Format("02.01.2006"),
+				CreatedAt:      time.Now(),
+				UpdatedAt:      time.Now(),
+			}
+			if err := s.employeeRepo.Update(saveCtx, &stored); err != nil {
+				s.logger.Warnf("Failed to save employee %d to cache: %v", e.ID, err)
+			}
 		}
-		if err := s.employeeRepo.Update(ctx, &stored); err != nil {
-			s.logger.Warnf("Failed to save employee %d to cache: %v", e.ID, err)
-		}
-	}
+	}()
 
 	return employees, nil
 }
@@ -103,6 +109,10 @@ func (s *employeeService) RefreshEmployees(ctx context.Context) error {
 		return fmt.Errorf("failed to get employees from BSUIR API: %w", err)
 	}
 
+	// Используем отдельный контекст с большим таймаутом для массового обновления
+	saveCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
 	stored := make([]models.StoredEmployee, len(employees))
 	for i, e := range employees {
 		stored[i] = models.StoredEmployee{
@@ -117,7 +127,7 @@ func (s *employeeService) RefreshEmployees(ctx context.Context) error {
 	}
 
 	for _, e := range stored {
-		if err := s.employeeRepo.Update(ctx, &e); err != nil {
+		if err := s.employeeRepo.Update(saveCtx, &e); err != nil {
 			s.logger.Warnf("Failed to update employee %d: %v", e.BSUIRID, err)
 		}
 	}

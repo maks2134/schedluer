@@ -52,19 +52,25 @@ func (s *groupService) GetAllGroups(ctx context.Context, useCache bool) ([]model
 		return nil, fmt.Errorf("failed to get groups from BSUIR API: %w", err)
 	}
 
-	for _, g := range groups {
-		stored := models.StoredGroup{
-			ID:             primitive.NewObjectID(),
-			BSUIRID:        g.ID,
-			GroupData:      g,
-			LastUpdateDate: time.Now().Format("02.01.2006"),
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+	// Сохраняем в фоне с отдельным контекстом
+	go func() {
+		saveCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		for _, g := range groups {
+			stored := models.StoredGroup{
+				ID:             primitive.NewObjectID(),
+				BSUIRID:        g.ID,
+				GroupData:      g,
+				LastUpdateDate: time.Now().Format("02.01.2006"),
+				CreatedAt:      time.Now(),
+				UpdatedAt:      time.Now(),
+			}
+			if err := s.groupRepo.Update(saveCtx, &stored); err != nil {
+				s.logger.Warnf("Failed to save group %d to cache: %v", g.ID, err)
+			}
 		}
-		if err := s.groupRepo.Update(ctx, &stored); err != nil {
-			s.logger.Warnf("Failed to save group %d to cache: %v", g.ID, err)
-		}
-	}
+	}()
 
 	return groups, nil
 }
@@ -98,6 +104,10 @@ func (s *groupService) RefreshGroups(ctx context.Context) error {
 		return fmt.Errorf("failed to get groups from BSUIR API: %w", err)
 	}
 
+	// Используем отдельный контекст с большим таймаутом для массового обновления
+	saveCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
 	stored := make([]models.StoredGroup, len(groups))
 	for i, g := range groups {
 		stored[i] = models.StoredGroup{
@@ -111,7 +121,7 @@ func (s *groupService) RefreshGroups(ctx context.Context) error {
 	}
 
 	for _, g := range stored {
-		if err := s.groupRepo.Update(ctx, &g); err != nil {
+		if err := s.groupRepo.Update(saveCtx, &g); err != nil {
 			s.logger.Warnf("Failed to update group %d: %v", g.BSUIRID, err)
 		}
 	}

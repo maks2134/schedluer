@@ -101,30 +101,38 @@ export function ScheduleView({ schedule, loading, onRefresh, refreshing }: Sched
       </Card>
 
       {/* Schedule by days */}
-      <div className="space-y-4">
-        {weekDays.map((day) => {
-          const daySchedule = schedule.schedules[day] || [];
-          if (daySchedule.length === 0) return null;
+      {schedule.schedules && Object.keys(schedule.schedules).length > 0 ? (
+        <div className="space-y-4">
+          {weekDays.map((day) => {
+            const daySchedule = schedule.schedules?.[day] || [];
+            if (!Array.isArray(daySchedule) || daySchedule.length === 0) return null;
 
-          return (
-            <Card key={day}>
-              <CardHeader>
-                <CardTitle className="text-lg">{day}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {daySchedule.map((lesson: Schedule, idx: number) => (
-                    <LessonCard key={idx} lesson={lesson} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+            return (
+              <Card key={day}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{day}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {daySchedule.map((lesson: Schedule, idx: number) => (
+                      <LessonCard key={idx} lesson={lesson} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            Расписание отсутствует
+          </CardContent>
+        </Card>
+      )}
 
       {/* Exams */}
-      {schedule.exams && schedule.exams.length > 0 && (
+      {schedule.exams && Array.isArray(schedule.exams) && schedule.exams.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Экзамены</CardTitle>
@@ -169,10 +177,10 @@ function LessonCard({ lesson }: { lesson: Schedule }) {
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-          {lesson.auditories.length > 0 && (
+          {lesson.auditories && Array.isArray(lesson.auditories) && lesson.auditories.length > 0 && (
             <span>📍 {lesson.auditories.join(', ')}</span>
           )}
-          {lesson.employees.length > 0 && (
+          {lesson.employees && Array.isArray(lesson.employees) && lesson.employees.length > 0 && (
             <span>
               👤 {lesson.employees.map((e) => `${e.lastName} ${e.firstName[0]}. ${e.middleName[0]}.`).join(', ')}
             </span>
@@ -180,7 +188,7 @@ function LessonCard({ lesson }: { lesson: Schedule }) {
           {lesson.numSubgroup > 0 && (
             <span>Подгруппа {lesson.numSubgroup}</span>
           )}
-          {lesson.weekNumber.length > 0 && (
+          {lesson.weekNumber && Array.isArray(lesson.weekNumber) && lesson.weekNumber.length > 0 && (
             <span>Недели: {lesson.weekNumber.join(', ')}</span>
           )}
         </div>
