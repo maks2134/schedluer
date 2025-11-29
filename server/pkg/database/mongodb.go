@@ -22,21 +22,28 @@ type Config struct {
 }
 
 func NewMongoDB(cfg Config) (*MongoDB, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
-	defer cancel()
+	logrus.Infof("Connecting to MongoDB: %s", maskURI(cfg.URI))
 
 	clientOptions := options.Client().
 		ApplyURI(cfg.URI).
 		SetMaxPoolSize(100).
 		SetMinPoolSize(10).
-		SetMaxConnIdleTime(30 * time.Second)
+		SetMaxConnIdleTime(30 * time.Second).
+		SetServerSelectionTimeout(30 * time.Second).
+		SetConnectTimeout(30 * time.Second)
 
 	client, err := mongo.Connect(clientOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
-	if err := client.Ping(ctx, nil); err != nil {
+	// Используем отдельный контекст с увеличенным таймаутом для Ping
+	pingCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	logrus.Info("Pinging MongoDB...")
+	if err := client.Ping(pingCtx, nil); err != nil {
+		client.Disconnect(context.Background())
 		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
@@ -65,4 +72,37 @@ func (m *MongoDB) Health(ctx context.Context) error {
 		return fmt.Errorf("MongoDB client is nil")
 	}
 	return m.Client.Ping(ctx, nil)
+}
+
+// maskURI скрывает пароль в URI для логирования
+func maskURI(uri string) string {
+	// Простая маскировка пароля в connection string
+	// Формат: mongodb+srv://user:password@host
+	if idx := len("mongodb+srv://"); len(uri) > idx {
+		start := idx
+		if atIdx := findAt(uri, start); atIdx > start {
+			if colonIdx := findColon(uri, start, atIdx); colonIdx > start {
+				return uri[:colonIdx+1] + "***" + uri[atIdx:]
+			}
+		}
+	}
+	return uri
+}
+
+func findAt(s string, start int) int {
+	for i := start; i < len(s); i++ {
+		if s[i] == '@' {
+			return i
+		}
+	}
+	return -1
+}
+
+func findColon(s string, start, end int) int {
+	for i := start; i < end && i < len(s); i++ {
+		if s[i] == ':' {
+			return i
+		}
+	}
+	return -1
 }

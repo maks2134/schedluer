@@ -7,6 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"schedluer/internal/service"
+
+	_ "schedluer/internal/models" // для Swagger документации
 )
 
 type GroupHandler struct {

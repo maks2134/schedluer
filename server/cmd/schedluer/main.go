@@ -8,11 +8,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"schedluer/internal/config"
 	"schedluer/internal/container"
+
+	_ "schedluer/docs"
 )
 
+// @title           Schedluer API
+// @version         1.0
+// @description     API для работы с расписанием БГУИР
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @schemes   http https
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -82,6 +94,8 @@ func setupRouter(ctn *container.Container) *gin.Engine {
 			"status": "ok",
 		})
 	})
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	ctn.Router.SetupRoutes(router)
 
