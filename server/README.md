@@ -17,7 +17,12 @@ server/
 │   └── models/             # Модели данных
 ├── pkg/                     # Переиспользуемые пакеты
 │   ├── bsuir/              # Клиент для API БГУИРа
+│   ├── database/           # MongoDB обертка
 │   └── converter/          # Конвертация расписания
+├── docs/                    # Swagger документация (генерируется)
+├── Dockerfile              # Multi-stage Dockerfile
+├── docker-compose.yml      # Docker Compose конфигурация
+├── Makefile                # Команды для разработки
 ├── go.mod
 └── README.md
 ```
@@ -25,67 +30,142 @@ server/
 ## Зависимости
 
 - **Gin** - HTTP веб-фреймворк
-- **MongoDB Driver** - Драйвер для работы с MongoDB
+- **MongoDB Driver v2** - Драйвер для работы с MongoDB
 - **Logrus** - Структурированное логирование
 - **Godotenv** - Загрузка переменных окружения из .env файла
+- **Swagger** - API документация
 
 ## Установка и запуск
 
+### Локальная разработка
+
 1. Установите зависимости:
 ```bash
-go mod download
+make deps
 ```
 
-2. Создайте файл `.env` на основе `.env.example`:
+2. Установите инструменты разработки:
+```bash
+make install-tools
+```
+
+3. Создайте файл `.env`:
 ```bash
 cp .env.example .env
 ```
 
-3. Настройте переменные окружения в `.env`:
+4. Настройте переменные окружения в `.env`:
 ```env
 SERVER_PORT=8080
 SERVER_HOST=localhost
-MONGODB_URI=mongodb://localhost:27017
+MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/?appName=Cluster0
 MONGODB_DATABASE=schedluer
 BSUIR_API_BASE_URL=https://iis.bsuir.by/api/v1
 LOG_LEVEL=info
 ```
 
-4. Запустите приложение:
+5. Сгенерируйте Swagger документацию:
 ```bash
+make swagger
+```
+
+6. Запустите приложение:
+```bash
+make run
+# или
 go run cmd/schedluer/main.go
 ```
 
-Или соберите бинарник:
+### Docker
+
+#### Сборка образа:
 ```bash
-go build -o schedluer cmd/schedluer/main.go
-./schedluer
+make docker-build
+# или
+docker build -t schedluer:latest .
 ```
 
-## API БГУИРа
+#### Запуск контейнера:
+```bash
+make docker-run
+# или
+docker run --rm -p 8080:8080 --env-file .env schedluer:latest
+```
 
-Проект включает клиент для работы со всеми эндпоинтами API БГУИРа:
+#### Docker Compose:
+```bash
+make docker-compose-up
+# или
+docker-compose up -d
+```
 
-- Получение расписания группы
-- Получение расписания преподавателя
-- Получение списка всех групп
-- Получение списка всех преподавателей
-- Получение списка всех факультетов
-- Получение списка всех кафедр
-- Получение списка всех специальностей
-- Получение объявлений преподавателя/кафедры
-- Получение списка всех аудиторий
-- Получение даты последнего обновления расписания
-- Получение текущей недели
+Просмотр логов:
+```bash
+make docker-compose-logs
+```
 
-Все методы реализованы в пакете `pkg/bsuir`.
+Остановка:
+```bash
+make docker-compose-down
+```
 
-## Модели данных
+## API Документация
 
-Все модели данных для работы с API БГУИРа определены в `internal/models/bsuir.go`:
-- `ScheduleResponse` - ответ API расписания
-- `Schedule` - занятие или экзамен
-- `EmployeeDto` - информация о преподавателе
-- `StudentGroupDto` - информация о группе
-- И другие вспомогательные модели
+После запуска приложения Swagger UI доступен по адресу:
+- **Swagger UI**: http://localhost:8080/swagger/index.html
+- **Health Check**: http://localhost:8080/health
 
+## Доступные команды
+
+Используйте `make help` для просмотра всех доступных команд:
+
+```bash
+make help          # Показать справку
+make swagger       # Сгенерировать Swagger документацию
+make build         # Собрать приложение
+make run           # Запустить приложение
+make test          # Запустить тесты
+make clean         # Очистить артефакты
+make docker-build  # Собрать Docker образ
+make docker-run    # Запустить Docker контейнер
+make dev           # Запустить в режиме разработки
+```
+
+## API Endpoints
+
+### Расписание
+- `GET /api/v1/schedule/group/:groupNumber` - Получить расписание группы
+- `GET /api/v1/schedule/employee/:urlId` - Получить расписание преподавателя
+- `POST /api/v1/schedule/group/:groupNumber/refresh` - Обновить расписание группы
+- `POST /api/v1/schedule/employee/:urlId/refresh` - Обновить расписание преподавателя
+
+### Группы
+- `GET /api/v1/groups` - Список всех групп
+- `GET /api/v1/groups/:groupNumber` - Получить группу по номеру
+- `POST /api/v1/groups/refresh` - Обновить список групп
+
+### Преподаватели
+- `GET /api/v1/employees` - Список всех преподавателей
+- `GET /api/v1/employees/:urlId` - Получить преподавателя по URL ID
+- `POST /api/v1/employees/refresh` - Обновить список преподавателей
+
+## Docker Best Practices
+
+Dockerfile использует multi-stage build для:
+- Минимального размера финального образа (~20MB)
+- Безопасности (непривилегированный пользователь)
+- Оптимизации кэширования слоев
+- Статической сборки бинарника
+
+## Разработка
+
+1. Внесите изменения в код
+2. Обновите Swagger аннотации в handlers
+3. Сгенерируйте документацию: `make swagger`
+4. Протестируйте локально: `make run`
+5. Соберите Docker образ: `make docker-build`
+6. Протестируйте в контейнере: `make docker-run`
+
+## Лицензия
+
+Apache 2.0

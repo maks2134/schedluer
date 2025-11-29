@@ -41,7 +41,7 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	mongoConfig := database.Config{
 		URI:      cfg.MongoDB.URI,
 		Database: cfg.MongoDB.Database,
-		Timeout:  10 * time.Second,
+		Timeout:  30 * time.Second, // Увеличиваем таймаут для Atlas
 	}
 
 	mongoDB, err := database.NewMongoDB(mongoConfig)
