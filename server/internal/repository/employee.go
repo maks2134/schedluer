@@ -84,7 +84,16 @@ func (r *employeeRepository) GetAll(ctx context.Context) ([]models.StoredEmploye
 	}(cursor, ctx)
 
 	var employees []models.StoredEmployee
-	if err := cursor.All(ctx, &employees); err != nil {
+	for cursor.Next(ctx) {
+		var employee models.StoredEmployee
+		if err := cursor.Decode(&employee); err != nil {
+			// Пропускаем документы с ошибками декодирования
+			continue
+		}
+		employees = append(employees, employee)
+	}
+
+	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
 

@@ -82,7 +82,16 @@ func (r *groupRepository) GetAll(ctx context.Context) ([]models.StoredGroup, err
 	}(cursor, ctx)
 
 	var groups []models.StoredGroup
-	if err := cursor.All(ctx, &groups); err != nil {
+	for cursor.Next(ctx) {
+		var group models.StoredGroup
+		if err := cursor.Decode(&group); err != nil {
+			// Пропускаем документы с ошибками декодирования
+			continue
+		}
+		groups = append(groups, group)
+	}
+
+	if err := cursor.Err(); err != nil {
 		return nil, err
 	}
 

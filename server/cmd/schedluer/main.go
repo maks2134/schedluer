@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
@@ -43,7 +44,7 @@ func main() {
 		}
 	}()
 
-	router := setupRouter(ctn)
+	router := setupRouter(ctn, cfg)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	logrus.Infof("Starting server on %s", addr)
@@ -78,8 +79,16 @@ func setupLogger(level string) {
 	}
 }
 
-func setupRouter(ctn *container.Container) *gin.Engine {
+func setupRouter(ctn *container.Container, cfg *config.Config) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.CORS.AllowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60, // 12 hours
+	}))
 
 	router.GET("/health", func(c *gin.Context) {
 		if err := ctn.MongoDB.Health(c.Request.Context()); err != nil {

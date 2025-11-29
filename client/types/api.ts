@@ -3,8 +3,8 @@
 export interface ScheduleResponse {
   employeeDto: EmployeeDto | null;
   studentGroupDto: StudentGroupDto | null;
-  schedules: Record<string, Schedule[]>;
-  exams: Schedule[];
+  schedules: Record<string, Schedule[]> | null;
+  exams: Schedule[] | null;
   startDate: string | null;
   endDate: string | null;
   startExamsDate: string | null;
@@ -43,10 +43,10 @@ export interface StudentGroupDto {
 }
 
 export interface Schedule {
-  weekNumber: number[];
-  studentGroups: StudentGroup[];
+  weekNumber: number[] | null;
+  studentGroups: StudentGroup[] | null;
   numSubgroup: number;
-  auditories: string[];
+  auditories: string[] | null;
   startLessonTime: string;
   endLessonTime: string;
   subject: string;
@@ -58,7 +58,7 @@ export interface Schedule {
   endLessonDate: string | null;
   announcement: boolean;
   split: boolean;
-  employees: EmployeeDto[];
+  employees: EmployeeDto[] | null;
 }
 
 export interface StudentGroup {
