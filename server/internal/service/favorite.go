@@ -14,6 +14,7 @@ import (
 
 type FavoriteService interface {
 	GetAllFavorites(ctx context.Context, userID string) ([]models.FavoriteGroup, error)
+	SearchFavorites(ctx context.Context, userID string, query string) ([]models.FavoriteGroup, error)
 	AddFavorite(ctx context.Context, userID string, groupNumber string) error
 	RemoveFavorite(ctx context.Context, userID string, groupNumber string) error
 	IsFavorite(ctx context.Context, userID string, groupNumber string) (bool, error)
@@ -34,6 +35,10 @@ func NewFavoriteService(favoriteRepo repository.FavoriteRepository, logger *logr
 
 func (s *favoriteService) GetAllFavorites(ctx context.Context, userID string) ([]models.FavoriteGroup, error) {
 	return s.favoriteRepo.GetAll(ctx, userID)
+}
+
+func (s *favoriteService) SearchFavorites(ctx context.Context, userID string, query string) ([]models.FavoriteGroup, error) {
+	return s.favoriteRepo.Search(ctx, userID, query)
 }
 
 func (s *favoriteService) AddFavorite(ctx context.Context, userID string, groupNumber string) error {

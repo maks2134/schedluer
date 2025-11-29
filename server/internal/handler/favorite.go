@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"schedluer/internal/models"
 	"schedluer/internal/service"
 )
 
@@ -42,6 +43,12 @@ func (h *FavoriteHandler) GetAllFavorites(c *gin.Context) {
 		return
 	}
 
+	// Убеждаемся, что возвращаем массив, а не null
+	if favorites == nil {
+		favorites = []models.FavoriteGroup{}
+	}
+
+	h.logger.Debugf("Returning %d favorites for user %s", len(favorites), userID)
 	c.JSON(http.StatusOK, favorites)
 }
 
@@ -136,4 +143,40 @@ func (h *FavoriteHandler) IsFavorite(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"is_favorite": isFav})
+}
+
+// SearchFavorites ищет избранные группы по запросу
+// @Summary      Поиск избранных групп
+// @Description  Ищет избранные группы пользователя по номеру группы
+// @Tags         favorites
+// @Accept       json
+// @Produce      json
+// @Param        user_id  query     string  true  "ID пользователя (пока используем 'default')"
+// @Param        query    query     string  true  "Поисковый запрос"
+// @Success      200      {array}   models.FavoriteGroup
+// @Failure      400      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /favorites/search [get]
+func (h *FavoriteHandler) SearchFavorites(c *gin.Context) {
+	userID := c.DefaultQuery("user_id", "default")
+	query := c.Query("query")
+
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "query parameter is required"})
+		return
+	}
+
+	favorites, err := h.favoriteService.SearchFavorites(c.Request.Context(), userID, query)
+	if err != nil {
+		h.logger.Errorf("Failed to search favorites: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search favorites"})
+		return
+	}
+
+	if favorites == nil {
+		favorites = []models.FavoriteGroup{}
+	}
+
+	h.logger.Debugf("Found %d favorites for user %s with query %s", len(favorites), userID, query)
+	c.JSON(http.StatusOK, favorites)
 }
