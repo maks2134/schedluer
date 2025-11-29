@@ -102,3 +102,11 @@ export interface RefreshResponse {
   message: string;
 }
 
+export interface FavoriteGroup {
+  id: string;
+  group_number: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+

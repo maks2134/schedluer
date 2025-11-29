@@ -4,6 +4,7 @@ import type {
   EmployeeListItem,
   ApiError,
   RefreshResponse,
+  FavoriteGroup,
 } from '@/types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
@@ -102,6 +103,27 @@ class ApiClient {
     return this.request<RefreshResponse>('/employees/refresh', {
       method: 'POST',
     });
+  }
+
+  // Favorites endpoints
+  async getAllFavorites(userId: string = 'default'): Promise<FavoriteGroup[]> {
+    return this.request<FavoriteGroup[]>(`/favorites?user_id=${userId}`);
+  }
+
+  async addFavorite(groupNumber: string, userId: string = 'default'): Promise<RefreshResponse> {
+    return this.request<RefreshResponse>(`/favorites/${groupNumber}?user_id=${userId}`, {
+      method: 'POST',
+    });
+  }
+
+  async removeFavorite(groupNumber: string, userId: string = 'default'): Promise<RefreshResponse> {
+    return this.request<RefreshResponse>(`/favorites/${groupNumber}?user_id=${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async isFavorite(groupNumber: string, userId: string = 'default'): Promise<{ is_favorite: boolean }> {
+    return this.request<{ is_favorite: boolean }>(`/favorites/${groupNumber}/check?user_id=${userId}`);
   }
 }
 

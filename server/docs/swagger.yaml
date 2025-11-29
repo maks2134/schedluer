@@ -62,6 +62,19 @@ definitions:
       urlId:
         type: string
     type: object
+  models.FavoriteGroup:
+    properties:
+      created_at:
+        type: string
+      group_number:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   models.Schedule:
     properties:
       announcement:
@@ -189,15 +202,8 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: API для работы с расписанием БГУИРа
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
+  contact: {}
+  description: API для работы с расписанием БГУИР
   title: Schedluer API
   version: "1.0"
 paths:
@@ -529,6 +535,160 @@ paths:
       summary: Обновить расписание группы
       tags:
       - schedule
+  /favorites:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех избранных групп пользователя
+      parameters:
+      - description: ID пользователя (пока используем 'default')
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.FavoriteGroup'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить все избранные группы
+      tags:
+      - favorites
+  /favorites/{groupNumber}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет группу из списка избранных для пользователя
+      parameters:
+      - description: ID пользователя (пока используем 'default')
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Номер группы
+        in: path
+        name: group_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить группу из избранного
+      tags:
+      - favorites
+    post:
+      consumes:
+      - application/json
+      description: Добавляет группу в список избранных для пользователя
+      parameters:
+      - description: ID пользователя (пока используем 'default')
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Номер группы
+        in: path
+        name: group_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Добавить группу в избранное
+      tags:
+      - favorites
+  /favorites/{groupNumber}/check:
+    get:
+      consumes:
+      - application/json
+      description: Проверяет, добавлена ли группа в избранное для пользователя
+      parameters:
+      - description: ID пользователя (пока используем 'default')
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Номер группы
+        in: path
+        name: group_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Проверить, является ли группа избранной
+      tags:
+      - favorites
 schemes:
 - http
 - https
